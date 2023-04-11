@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
 
-	"github.com/smartpcr/azs-2-tf/src/config"
+	"github.com/smartpcr/azs-2-tf/config"
 )
 
 var (

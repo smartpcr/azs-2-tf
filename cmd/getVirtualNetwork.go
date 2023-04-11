@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/smartpcr/azs-2-tf/src/config"
+	"github.com/smartpcr/azs-2-tf/config"
 )
 
 var getVirtualNetworkCommand = &cobra.Command{
