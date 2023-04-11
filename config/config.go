@@ -3,10 +3,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/mitchellh/go-homedir"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
+	"github.com/smartpcr/azs-2-tf/log"
+	"github.com/smartpcr/azs-2-tf/utils"
 	"io"
 	"os"
 	"path/filepath"
@@ -21,18 +19,15 @@ type AppConfig struct {
 	AzureStackArmEndpoint string `json:"azure_stack_arm_endpoint"`
 }
 
-func NewAppConfig() (*AppConfig, error) {
-	// specify config.json file
-	home, err := homedir.Dir()
-	cobra.CheckErr(err)
-	configDir := filepath.Join(home, AppFolderName)
-	cfgFile := filepath.Join(configDir, ConfigFileName)
+func NewAppConfig(settings utils.Settings) (*AppConfig, error) {
+	configDir := settings.GetConfigFolderPath()
+	cfgFile := filepath.Join(configDir, settings.GetConfigFileName())
 
 	// read config.json file as json
 	// Open the JSON file
 	file, err := os.Open(cfgFile)
 	if err != nil {
-		logrus.Errorln("Unable to open config file: %s", cfgFile)
+		log.Log.Errorf("Unable to open config file: %s", cfgFile)
 		return nil, err
 	}
 	defer func(file *os.File) {
@@ -42,7 +37,7 @@ func NewAppConfig() (*AppConfig, error) {
 	// Read the file content
 	content, err := io.ReadAll(file)
 	if err != nil {
-		logrus.Errorln("Error reading file:", err)
+		log.Log.Errorf("Error reading file: %v", err)
 		return nil, err
 	}
 
@@ -57,16 +52,23 @@ func NewAppConfig() (*AppConfig, error) {
 	return appConfig, nil
 }
 
-func (appConfig *AppConfig) LoadEnvironment() (*azure.Environment, error) {
-	// load azure stack environment
-	env, err := azure.EnvironmentFromName(appConfig.AzureStackEnvironment)
+func (config *AppConfig) save(settings utils.Settings) error {
+	configDir := settings.GetConfigFolderPath()
+	err := utils.EnsureDirectory(configDir)
 	if err != nil {
-		logrus.Errorln("Error loading azure stack environment: %s", appConfig.AzureStackEnvironment)
-		return nil, err
+		return err
 	}
 
-	// set azure stack arm endpoint
-	env.ResourceManagerEndpoint = appConfig.AzureStackArmEndpoint
+	cfgFile := filepath.Join(configDir, settings.GetConfigFileName())
+	jsonData, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return err
+	}
 
-	return &env, nil
+	err = os.WriteFile(cfgFile, jsonData, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

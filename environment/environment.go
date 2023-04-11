@@ -1,12 +1,22 @@
 package environment
 
-import "github.com/Azure/go-autorest/autorest/azure"
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
 
 type IEnvironment interface {
-	LoadEnvironment() (*azure.Environment, error)
+	GetName() string
+	GetEndpoint() string
+	LoadEnvironment() (*Environment, error)
 }
 
-var _ IEnvironment = &Environment{}
+var (
+	_ IEnvironment = &AzureEnvironment{}
+	_ IEnvironment = &AzureStackEnvironment{}
+)
 
 type IdentityProvider string
 
@@ -49,7 +59,33 @@ type Environment struct {
 	Gallery                 string         `json:"gallery"`
 }
 
-func (e Environment) LoadEnvironment() (*azure.Environment, error) {
-	//TODO implement me
-	panic("implement me")
+func getSupportedEnvironments(name string, uri string) (*Environment, error) {
+	client := &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		},
+	}
+	req, err := http.NewRequestWithContext(context.Background(), "GET", uri, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving environments from Azure MetaData service: %+v", err)
+	}
+
+	var environments []Environment
+	if err := json.NewDecoder(resp.Body).Decode(&environments); err != nil {
+		return nil, err
+	}
+
+	var env Environment
+	for _, e := range environments {
+		if e.Name == name {
+			env = e
+		}
+	}
+
+	return &env, nil
 }

@@ -2,17 +2,22 @@ package log
 
 import (
 	"context"
+	"github.com/smartpcr/azs-2-tf/utils/mocks"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
+var (
+	settings = mocks.NewMockSettings()
+)
+
 func TestFileLogger(t *testing.T) {
-	log := New(context.TODO(), FileLogger)
+	log := New(context.TODO(), settings, FileLogger)
 	log.Info("Hello, world!")
 
-	logFile := filepath.Join(logFolder, logFileName)
+	logFile := filepath.Join(settings.GetLogFolderPath(), settings.GetLogFileName())
 	_, err := os.Stat(logFile)
 	if err != nil {
 		t.Fatalf("log file doesn't exist: %v", err)
@@ -33,6 +38,6 @@ func TestFileLogger(t *testing.T) {
 }
 
 func TestConsoleLogger(t *testing.T) {
-	log := New(context.TODO(), ConsoleLogger)
+	log := New(context.TODO(), settings, ConsoleLogger)
 	log.Warnf("Hello, %s!", "World")
 }

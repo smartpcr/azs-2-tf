@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/smartpcr/azs-2-tf/log"
+	"github.com/smartpcr/azs-2-tf/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,9 +16,10 @@ import (
 )
 
 var (
-	cfgFile string
-	RootCmd = &cobra.Command{
-		Use:     config.AppName,
+	cfgFile     string
+	appSettings = utils.AppSettings{}
+	RootCmd     = &cobra.Command{
+		Use:     appSettings.GetAppName(),
 		Version: config.Version,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return bindViperToCobra(cmd)
@@ -39,12 +41,12 @@ func initConfig() {
 		// Search config under "~/.azs-2-tf/" (without extension).
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
-		configDir := filepath.Join(home, config.AppFolderName)
-		cfgFile = filepath.Join(configDir, config.ConfigFileName)
+		configDir := filepath.Join(home, appSettings.GetAppFolderPath())
+		cfgFile = filepath.Join(configDir, appSettings.GetConfigFileName())
 	}
 	viper.SetConfigFile(cfgFile)
 	viper.AutomaticEnv() // read in environment variables that match
-	viper.SetEnvPrefix(config.AppName)
+	viper.SetEnvPrefix(appSettings.GetAppName())
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.SetConfigType("json")
 	if err := viper.ReadInConfig(); err != nil {

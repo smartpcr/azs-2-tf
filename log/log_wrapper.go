@@ -3,7 +3,6 @@ package log
 import (
 	"context"
 	"github.com/sirupsen/logrus"
-	"github.com/smartpcr/azs-2-tf/config"
 	"github.com/smartpcr/azs-2-tf/utils"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
@@ -16,15 +15,11 @@ type LoggerType int
 const (
 	ConsoleLogger LoggerType = iota
 	FileLogger
-
-	logFileName = "azs-2-tf.log"
 )
 
 var (
-	appFolder = filepath.Join(os.Getenv("ProgramData"), config.AppFolderName)
-	logFolder = filepath.Join(appFolder, "logs")
-	Log       *LoggerWrapper
-	_         Logger = &LoggerWrapper{}
+	Log *LoggerWrapper
+	_   Logger = &LoggerWrapper{}
 )
 
 type Logger interface {
@@ -53,15 +48,17 @@ type KeyValuePair struct {
 }
 
 func init() {
+	appSettings := &utils.AppSettings{}
+	Log = New(context.Background(), appSettings, ConsoleLogger, FileLogger)
+}
+
+func New(ctx context.Context, appSettings utils.Settings, loggerTypes ...LoggerType) *LoggerWrapper {
+	logFolder := appSettings.GetLogFolderPath()
 	err := utils.EnsureDirectory(logFolder)
 	if err != nil {
 		panic(err)
 	}
 
-	Log = New(context.Background(), ConsoleLogger, FileLogger)
-}
-
-func New(ctx context.Context, loggerTypes ...LoggerType) *LoggerWrapper {
 	logger := logrus.New()
 	logger.SetLevel(logrus.InfoLevel)
 	logger.SetFormatter(&logrus.TextFormatter{
@@ -76,7 +73,7 @@ func New(ctx context.Context, loggerTypes ...LoggerType) *LoggerWrapper {
 	for _, loggerType := range loggerTypes {
 		if loggerType == FileLogger {
 			var fileLogger = &lumberjack.Logger{
-				Filename:   filepath.Join(logFolder, logFileName),
+				Filename:   filepath.Join(logFolder, appSettings.GetLogFileName()),
 				MaxSize:    50, // megabytes
 				MaxAge:     28, //days
 				MaxBackups: 3,
