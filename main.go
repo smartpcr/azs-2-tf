@@ -5,7 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/smartpcr/azs-2-tf/src/cmd"
+	"github.com/smartpcr/azs-2-tf/cmd"
 )
 
 func main() {
