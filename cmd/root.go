@@ -2,26 +2,21 @@ package cmd
 
 import (
 	"fmt"
-	"io"
+	"github.com/smartpcr/azs-2-tf/log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/sirupsen/logrus"
+	"github.com/smartpcr/azs-2-tf/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"gopkg.in/natefinch/lumberjack.v2"
-
-	"github.com/smartpcr/azs-2-tf/config"
 )
 
 var (
-	appFolder = filepath.Join(os.Getenv("ProgramData"), config.AppFolderName)
-	logFolder = filepath.Join(appFolder, "logs")
-	cfgFile   string
-	RootCmd   = &cobra.Command{
+	cfgFile string
+	RootCmd = &cobra.Command{
 		Use:     config.AppName,
 		Version: config.Version,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -55,44 +50,22 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found; ignore error if desired
-			logrus.Errorln("No config file found: %s", cfgFile)
+			log.Log.Errorf("No config file found: %s", cfgFile)
 		} else {
 			// Config file was found but another error was produced
-			logrus.Errorln("Error reading config file")
+			log.Log.Error("Error reading config file")
 		}
 		os.Exit(1)
 	}
 
 	err := viper.Unmarshal(&appConfig)
 	if err != nil {
-		logrus.Fatalf("unable to decode into struct, %v", err)
+		log.Log.Fatalf("unable to decode into struct, %v", err)
 	}
 }
 
 func initLogger() {
-	var fileLogger = &lumberjack.Logger{
-		Filename:   filepath.Join(logFolder, "azs-2-tf.log"),
-		MaxSize:    50, // megabytes
-		MaxAge:     28, //days
-		MaxBackups: 3,
-		LocalTime:  true,
-		Compress:   false,
-	}
-
-	var consoleLogger = logrus.New()
-	consoleLogger.SetOutput(os.Stdout)
-	consoleLogger.SetLevel(logrus.InfoLevel)
-	consoleLogger.SetFormatter(&logrus.TextFormatter{
-		DisableLevelTruncation:    true,
-		ForceColors:               true,
-		PadLevelText:              true,
-		DisableTimestamp:          true,
-		EnvironmentOverrideColors: true,
-	})
-
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
-	logger.SetOutput(io.MultiWriter(fileLogger, consoleLogger.Out))
+	log.Log.Info("initialized logger")
 }
 
 func bindViperToCobra(cmd *cobra.Command) error {
