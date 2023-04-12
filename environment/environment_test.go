@@ -1,19 +1,20 @@
 package environment
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAzureStackEnvironment(t *testing.T) {
-	azEnv := NewAzureStackEnvironment(
+	azEnv, err := NewAzureStackEnvironment(
 		"Northwest",
 		"management.northwest.azs-longhaul-17.selfhost.corp.microsoft.com")
-	env, err := azEnv.LoadEnvironment()
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	env := azEnv.Environment
 	assert.NotNil(t, env)
 	assert.NotNil(t, env.Authentication)
 	assert.NotNil(t, env.Authentication.Audiences)

@@ -3,20 +3,23 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/smartpcr/azs-2-tf/log"
-	"github.com/smartpcr/azs-2-tf/utils"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/smartpcr/azs-2-tf/environment"
+	"github.com/smartpcr/azs-2-tf/log"
+	"github.com/smartpcr/azs-2-tf/utils"
 )
 
 type AppConfig struct {
-	SubscriptionId        string `json:"subscription_id"`
-	TenantId              string `json:"tenant_id"`
-	ClientId              string `json:"client_id"`
-	ClientSecret          string `json:"client_secret"`
-	AzureStackEnvironment string `json:"azure_stack_environment"`
-	AzureStackArmEndpoint string `json:"azure_stack_arm_endpoint"`
+	SubscriptionId   string                `json:"subscription_id"`
+	TenantId         string                `json:"tenant_id"`
+	ClientId         string                `json:"client_id"`
+	ClientSecret     string                `json:"client_secret"`
+	EnvironmentType  utils.EnvironmentType `json:"environment_type"`
+	EnvironmentName  string                `json:"environment_name"`
+	MetadataEndpoint string                `json:"metadata_endpoint"`
 }
 
 func NewAppConfig(settings utils.Settings) (*AppConfig, error) {
@@ -71,4 +74,24 @@ func (config *AppConfig) save(settings utils.Settings) error {
 	}
 
 	return nil
+}
+
+func (config *AppConfig) GetEnvironment() (*environment.Environment, error) {
+	if config.EnvironmentType == utils.EnvironmentTypeAzure {
+		azureEnv, err := environment.NewAzureEnvironment(config.EnvironmentName, config.MetadataEndpoint)
+		if err != nil {
+			log.Log.Errorf("Failed to load azure environment: %s", err)
+			return nil, err
+		}
+		return &azureEnv.Environment, nil
+	} else if config.EnvironmentType == utils.EnvironmentTypeAzureStack {
+		azsEnv, err := environment.NewAzureStackEnvironment(config.EnvironmentName, config.MetadataEndpoint)
+		if err != nil {
+			log.Log.Errorf("Failed to load azure stack environment: %s", err)
+			return nil, err
+		}
+		return &azsEnv.Environment, nil
+	} else {
+		return nil, fmt.Errorf("Unknown environment type: %s", config.EnvironmentType)
+	}
 }
