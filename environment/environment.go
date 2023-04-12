@@ -5,17 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type IEnvironment interface {
 	GetName() string
-	GetEndpoint() string
+	GetArmEndpoint() string
 	LoadEnvironment() (*Environment, error)
 }
 
 var (
-	_ IEnvironment = &AzureEnvironment{}
-	_ IEnvironment = &AzureStackEnvironment{}
+	_                  IEnvironment = &AzureEnvironment{}
+	_                  IEnvironment = &AzureStackEnvironment{}
+	metadataPath                    = "metadata/endpoints"
+	metadataApiVersion              = "2020-06-01"
 )
 
 type IdentityProvider string
@@ -81,11 +84,23 @@ func getSupportedEnvironments(name string, uri string) (*Environment, error) {
 	}
 
 	var env Environment
-	for _, e := range environments {
-		if e.Name == name {
-			env = e
+	if len(environments) == 0 {
+		return nil, fmt.Errorf("no environments were returned from Azure MetaData service")
+	} else if len(environments) == 1 {
+		env = environments[0]
+	} else {
+		for _, e := range environments {
+			if e.Name == name {
+				env = e
+			}
 		}
 	}
 
 	return &env, nil
+}
+
+func getMetadataUri(armEndpoint string) string {
+	endpoint := strings.TrimRight(strings.TrimLeft(armEndpoint, "https://"), "/")
+	uri := fmt.Sprintf("https://%s/%s?api-version=%s", endpoint, metadataPath, metadataApiVersion)
+	return uri
 }

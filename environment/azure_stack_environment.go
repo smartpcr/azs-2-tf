@@ -1,25 +1,30 @@
 package environment
 
-import (
-	"fmt"
-	"strings"
-)
-
 type AzureStackEnvironment struct {
 	Name        string      `json:"name"`
+	ArmEndpoint string      `json:"armEndpoint"`
 	Environment Environment `json:"environment"`
+}
+
+func NewAzureStackEnvironment(name string, endpoint string) *AzureStackEnvironment {
+	return &AzureStackEnvironment{
+		Name:        name,
+		ArmEndpoint: endpoint,
+		Environment: Environment{},
+	}
 }
 
 func (a AzureStackEnvironment) GetName() string {
 	return a.Name
 }
 
-func (a AzureStackEnvironment) GetEndpoint() string {
-	return fmt.Sprintf("%s/metadata/endpoints?api-version=2020-06-01", strings.TrimRight(a.GetEndpoint(), "/"))
+func (a AzureStackEnvironment) GetArmEndpoint() string {
+	return a.ArmEndpoint
 }
 
 func (a AzureStackEnvironment) LoadEnvironment() (*Environment, error) {
-	env, err := getSupportedEnvironments(a.Name, a.GetEndpoint())
+	uri := getMetadataUri(a.GetArmEndpoint())
+	env, err := getSupportedEnvironments(a.Name, uri)
 	if err != nil {
 		return nil, err
 	}

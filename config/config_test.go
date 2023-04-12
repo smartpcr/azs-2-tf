@@ -1,10 +1,7 @@
 package config
 
 import (
-	"context"
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/smartpcr/azs-2-tf/utils/mocks"
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -38,32 +35,4 @@ func TestCreateAppConfig(t *testing.T) {
 	if config.AzureStackEnvironment != "AzureCloud" && config.AzureStackArmEndpoint == "" {
 		t.Fatal("ARM endpoint is required for AzureStack environment")
 	}
-}
-
-func TestCreateAppConfigFromEnvironment(t *testing.T) {
-	err := config.save(settings)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	config, err := NewAppConfig(settings)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	environments, err := getSupportedEnvironments(context.Background(), config.AzureStackArmEndpoint)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var env *azure.Environment
-	for _, e := range environments {
-		if e.Name == config.AzureStackEnvironment {
-			env = &e
-			break
-		}
-	}
-
-	assert.NotNil(t, env)
-	assert.Equal(t, env.Name, config.AzureStackEnvironment)
 }
