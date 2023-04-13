@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/smartpcr/azs-2-tf/internal/azurestack"
 
 	"github.com/smartpcr/azs-2-tf/client"
 	"github.com/smartpcr/azs-2-tf/log"
@@ -29,6 +32,7 @@ var (
 	}
 	appConfig     *config.AppConfig
 	clientBuilder *client.ClientBuilder
+	azsClient     *azurestack.Client
 )
 
 func init() {
@@ -95,6 +99,12 @@ func initClientBuilder() {
 	}
 
 	clientBuilder = client.NewClientBuilder(appConfig, env, appSettings)
+
+	azsClient, err = client.NewAzureStackClient(context.Background(), appConfig)
+	if err != nil {
+		log.Log.Errorf("Failed to create azure stack client: %s", err)
+		os.Exit(1)
+	}
 }
 
 func bindViperToCobra(cmd *cobra.Command) error {

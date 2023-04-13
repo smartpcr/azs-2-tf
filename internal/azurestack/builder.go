@@ -3,6 +3,9 @@ package azurestack
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/smartpcr/azs-2-tf/environment"
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/go-azure-helpers/authentication"
@@ -22,7 +25,8 @@ type ClientBuilder struct {
 }
 
 func Build(ctx context.Context, builder ClientBuilder) (*Client, error) {
-	env, err := authentication.AzureEnvironmentByNameFromEndpoint(ctx, builder.AuthConfig.MetadataHost, builder.AuthConfig.Environment)
+	//env, err := authentication.AzureEnvironmentByNameFromEndpoint(ctx, builder.AuthConfig.MetadataHost, builder.AuthConfig.Environment)
+	env, err := environment.GetAzureStackEnvironment(ctx, builder.AuthConfig.Environment, builder.AuthConfig.MetadataHost)
 	if err != nil {
 		return nil, fmt.Errorf("determining environment: %v", err)
 	}
@@ -80,7 +84,7 @@ func Build(ctx context.Context, builder ClientBuilder) (*Client, error) {
 		GraphEndpoint:               graphEndpoint,
 		KeyVaultAuthorizer:          keyVaultAuth,
 		ResourceManagerAuthorizer:   auth,
-		ResourceManagerEndpoint:     endpoint,
+		ResourceManagerEndpoint:     "https://" + strings.TrimLeft(endpoint, "https://"),
 		StorageAuthorizer:           storageAuth,
 		SkipProviderReg:             builder.SkipProviderRegistration,
 		DisableCorrelationRequestID: builder.DisableCorrelationRequestID,
