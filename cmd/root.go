@@ -6,11 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-
 	"github.com/smartpcr/azs-2-tf/client"
 	"github.com/smartpcr/azs-2-tf/log"
 	"github.com/smartpcr/azs-2-tf/utils"
@@ -24,7 +19,7 @@ import (
 
 var (
 	cfgFile     string
-	appSettings = utils.AppSettings{}
+	appSettings *utils.AppSettings
 	RootCmd     = &cobra.Command{
 		Use:     appSettings.GetAppName(),
 		Version: config.Version,
@@ -32,7 +27,7 @@ var (
 			return bindViperToCobra(cmd)
 		},
 	}
-	appConfig     config.AppConfig
+	appConfig     *config.AppConfig
 	clientBuilder *client.ClientBuilder
 )
 
@@ -49,6 +44,8 @@ func initLogger() {
 }
 
 func initConfig() {
+	appSettings := utils.AppSettings{}
+
 	if cfgFile == "" {
 		configDir := appSettings.GetConfigFolderPath()
 		cfgFile = filepath.Join(configDir, appSettings.GetConfigFileName())
@@ -97,50 +94,7 @@ func initClientBuilder() {
 		os.Exit(1)
 	}
 
-	var cloudCfg cloud.Configuration
-	if env.EnvironmentType == utils.EnvironmentTypeAzureStack {
-		cloudCfg = cloud.Configuration{
-			ActiveDirectoryAuthorityHost: env.Authentication.LoginEndpoint,
-			Services: map[cloud.ServiceName]cloud.ServiceConfiguration{
-				cloud.ResourceManager: {
-					Endpoint: env.ResourceManager,
-					Audience: env.Authentication.Audiences[0],
-				},
-			},
-		}
-	} else {
-		cloudCfg = cloud.AzurePublic
-	}
-
-	clientOpt := arm.ClientOptions{
-		ClientOptions: policy.ClientOptions{
-			//APIVersion: env.ApiVersion,
-			Cloud: cloudCfg,
-			Telemetry: policy.TelemetryOptions{
-				ApplicationID: appSettings.GetAppName(),
-				Disabled:      false,
-			},
-			Logging: policy.LogOptions{
-				IncludeBody: true,
-			},
-		},
-	}
-
-	// default credential read from environment variables
-	_ = os.Setenv("AZURE_TENANT_ID", appConfig.TenantId)
-	_ = os.Setenv("AZURE_CLIENT_ID", appConfig.ClientId)
-	_ = os.Setenv("AZURE_CLIENT_SECRET", appConfig.ClientSecret)
-	_ = os.Setenv("AZURE_SUBSCRIPTION_ID", appConfig.SubscriptionId)
-	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
-		ClientOptions: clientOpt.ClientOptions,
-		TenantID:      appConfig.TenantId,
-	})
-	if err != nil {
-		log.Log.Errorf("Failed to obtain credential for %s: %s", env.Name, err)
-		os.Exit(1)
-	}
-
-	clientBuilder = client.NewClientBuilder(cred, clientOpt, appConfig.SubscriptionId, env.ApiVersion)
+	clientBuilder = client.NewClientBuilder(appConfig, env, appSettings)
 }
 
 func bindViperToCobra(cmd *cobra.Command) error {

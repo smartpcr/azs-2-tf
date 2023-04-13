@@ -7,19 +7,29 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Azure/go-autorest/autorest/adal"
+
 	"github.com/smartpcr/azs-2-tf/environment"
 	"github.com/smartpcr/azs-2-tf/log"
 	"github.com/smartpcr/azs-2-tf/utils"
 )
 
+var logger = log.Log
+
 type AppConfig struct {
-	SubscriptionId   string                `json:"subscription_id"`
-	TenantId         string                `json:"tenant_id"`
-	ClientId         string                `json:"client_id"`
-	ClientSecret     string                `json:"client_secret"`
-	EnvironmentType  utils.EnvironmentType `json:"environment_type"`
-	EnvironmentName  string                `json:"environment_name"`
-	MetadataEndpoint string                `json:"metadata_endpoint"`
+	SubscriptionId     string                `json:"subscription_id"`
+	TenantId           string                `json:"tenant_id"`
+	ClientId           string                `json:"client_id"`
+	ClientSecret       string                `json:"client_secret"`
+	EnvironmentType    utils.EnvironmentType `json:"environment_type"`
+	EnvironmentName    string                `json:"environment_name"`
+	MetadataEndpoint   string                `json:"metadata_endpoint"`
+	AuxiliaryTenantIds []string              `json:"auxiliary_tenant_ids"`
+}
+
+type OAuthConfig struct {
+	OAuth            *adal.OAuthConfig
+	MultiTenantOauth *adal.MultiTenantOAuthConfig
 }
 
 func NewAppConfig(settings utils.Settings) (*AppConfig, error) {

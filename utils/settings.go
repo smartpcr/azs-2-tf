@@ -8,18 +8,25 @@ import (
 )
 
 type IdentityProvider string
+
+const (
+	IdentityProviderAAD  IdentityProvider = "aad"
+	IdentityProviderADFS IdentityProvider = "adfs"
+)
+
 type EnvironmentType string
 
 const (
-	IdentityProviderAAD       IdentityProvider = "aad"
-	IdentityProviderADFS      IdentityProvider = "adfs"
-	EnvironmentTypeAzureStack EnvironmentType  = "AzureStack"
-	EnvironmentTypeAzure      EnvironmentType  = "Azure"
-	appName                   string           = "azs-2-tf"
-	appFolderName             string           = ".azs-2-tf"
-	configFileName            string           = "config.json"
-	logFileName               string           = "azs-2-tf.log"
-	Terraform_Env_Prefix      string           = "ARM"
+	EnvironmentTypeAzureStack EnvironmentType = "AzureStack"
+	EnvironmentTypeAzure      EnvironmentType = "Azure"
+)
+
+const (
+	appName              string = "azs-2-tf"
+	appFolderName        string = ".azs-2-tf"
+	configFileName       string = "config.json"
+	logFileName          string = "azs-2-tf.log"
+	Terraform_Env_Prefix string = "ARM"
 )
 
 type Settings interface {
