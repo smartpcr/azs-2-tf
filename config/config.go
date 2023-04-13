@@ -17,14 +17,49 @@ import (
 var logger = log.Log
 
 type AppConfig struct {
-	SubscriptionId     string                `json:"subscription_id"`
-	TenantId           string                `json:"tenant_id"`
-	ClientId           string                `json:"client_id"`
-	ClientSecret       string                `json:"client_secret"`
-	EnvironmentType    utils.EnvironmentType `json:"environment_type"`
-	EnvironmentName    string                `json:"environment_name"`
-	MetadataEndpoint   string                `json:"metadata_endpoint"`
-	AuxiliaryTenantIds []string              `json:"auxiliary_tenant_ids"`
+	SubscriptionId   string                `json:"subscription_id"`
+	TenantId         string                `json:"tenant_id"`
+	ClientId         string                `json:"client_id"`
+	EnvironmentType  utils.EnvironmentType `json:"environment_type"`
+	EnvironmentName  string                `json:"environment_name"`
+	MetadataEndpoint string                `json:"metadata_endpoint"`
+
+	// Auxiliary tenant IDs used for multi tenant auth
+	SupportsAuxiliaryTenants bool     `json:"supports_auxiliary_tenants"`
+	AuxiliaryTenantIds       []string `json:"auxiliary_tenant_ids"`
+
+	// The custom Resource Manager Endpoint which should be used
+	// only applicable for Azure Stack at this time.
+	CustomResourceManagerEndpoint string `json:"custom_resource_manager_endpoint"`
+
+	// Azure CLI Tokens Auth
+	SupportsAzureCliToken bool `json:"supports_azure_cli_token"`
+
+	// Managed Service Identity Auth
+	SupportsManagedServiceIdentity bool   `json:"supports_managed_service_identity"`
+	MsiEndpoint                    string `json:"msi_endpoint"`
+
+	// Service Principal (Client Cert) Auth
+	SupportsClientCertAuth bool   `json:"supports_client_cert_auth"`
+	ClientCertPath         string `json:"client_cert_path"`
+	ClientCertPassword     string `json:"client_cert_password"`
+
+	// Service Principal (Client Secret) Auth
+	SupportsClientSecretAuth bool   `json:"supports_client_secret_auth"`
+	ClientSecret             string `json:"client_secret"`
+	ClientSecretDocsLink     string `json:"client_secret_docs_link"`
+
+	// OIDC Auth
+	SupportsOIDCAuth    bool   `json:"supports_oidc_auth"`
+	IDTokenRequestURL   string `json:"id_token_request_url"`
+	IDTokenRequestToken string `json:"id_token_request_token"`
+
+	// Beta opt-in for Microsoft Graph
+	UseMicrosoftGraph bool `json:"use_microsoft_graph"`
+
+	SkipProviderRegistration    bool   `json:"skip_provider_registration"`
+	TerraformVersion            string `json:"terraform_version"`
+	DisableCorrelationRequestID bool   `json:"disable_correlation_request_id"`
 }
 
 type OAuthConfig struct {
